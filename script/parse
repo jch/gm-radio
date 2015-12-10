@@ -1,0 +1,33 @@
+#!/usr/bin/env ruby
+
+require "csv"
+
+# load prefixes table
+prefixes = {}
+CSV.foreach(File.expand_path("../../binary_tables/prefixes.csv", __FILE__)) do |row|
+  next if row == ["type", "prefix"]
+  prefixes[row[1]] = row[0]
+end
+
+# usage instructions
+unless path = ARGV.shift
+  abort "Usage: script/parse /path/to/captured_data.out"
+end
+
+# parse file replacing lines with known prefixes
+lines = File.readlines(path)
+lines.each_with_index do |line, index|
+  # drop the first and last lines since they may be partial captures
+  next if index == 0 || index == lines.length - 1
+
+  # get rid of anything that isn't a 0 or 1
+  line.gsub!(/[^0-1]/, '')
+
+  prefixes.each do |key, value|
+    next unless line[0..key.length-1] == key
+
+    line = value
+  end
+
+  puts line
+end
