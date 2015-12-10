@@ -6,7 +6,7 @@ for line in open('seconds.csv'):
     line = line.rstrip()
     if line.startswith('seconds'):
         continue
-    (seconds, message, inverted) = line.split(',')
+    (seconds, message) = line.split(',')
     data.append([int(seconds), message])
 
 for (seconds, message) in data:
