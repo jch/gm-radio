@@ -15,3 +15,10 @@ alias ardb="platformio -f -c atom run"
 alias ardu="platformio -f -c atom run -t upload"
 alias ardm="platformio serialports monitor"
 ```
+
+## Development
+
+```sh
+git clone https://github.com/jch/gm-radio
+rake
+```
