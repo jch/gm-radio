@@ -1,0 +1,56 @@
+#!/usr/bin/env ruby
+# Usage: script/saleae /path/to/captured_data.csv
+#        script/saleae data.csv | jq '.[] | .message'
+
+require "csv"
+require "json"
+
+# input
+csv = CSV.read ARGV.shift
+# remove header row
+csv.shift if csv[0][0] == "Time[s]"
+
+# turn seconds into microseconds
+def seconds_to_micros(seconds)
+  seconds * 1_000_000
+end
+
+# extract timestamp from row
+def timestamp(row)
+  row[0].to_f
+end
+
+# extract signal from row
+def signal(row)
+  row[1].to_i
+end
+
+messages = []
+message = []
+
+csv.each_with_index do |row, index|
+  if signal(row) == 0
+    # check width of pulse and record 0 or 1
+    width_of_pulse = seconds_to_micros(timestamp(csv[index+1]) - timestamp(row))
+
+    case width_of_pulse
+    when 70..110
+      message.push(0)
+      expected_width_until_next_pulse = 890..930
+    when 630..670
+      message.push(1)
+      expected_width_until_next_pulse = 340..380
+    end
+
+    if csv[index+2] && csv[index+1]
+      distance_to_next_pulse = seconds_to_micros(timestamp(csv[index+2]) - timestamp(csv[index+1]))
+      unless expected_width_until_next_pulse.cover? distance_to_next_pulse
+        messages.push({:message => message.join, :milliseconds_to_next_message => distance_to_next_pulse/1000})
+        message = []
+      end
+    end
+  end
+end
+messages.push({:message => message.join, :milliseconds_to_next_message => 0})
+
+puts JSON.pretty_generate(messages)
