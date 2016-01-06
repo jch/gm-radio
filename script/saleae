@@ -42,6 +42,7 @@ def format_message(message, micros_to_next_message)
   {
     :bits => message,
     :type => prefix[1],
+    :prefix => prefix[0],
     :bits_after_prefix => prefix.any? ? message.gsub(/\A#{prefix[0]}/, "") : nil,
     :milliseconds_to_next_message => micros_to_next_message/1000
   }
