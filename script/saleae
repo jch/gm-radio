@@ -30,16 +30,19 @@ def signal(row)
   row[1].to_i
 end
 
-def type_of_message(message)
+def prefix_and_type(message)
   prefix = PREFIXES.find {|prefix, _| message.start_with?(prefix) }
 
-  prefix && prefix[1]
+  prefix || []
 end
 
 def format_message(message, micros_to_next_message)
+  prefix = prefix_and_type(message)
+
   {
-    :message => message,
-    :type => type_of_message(message),
+    :bits => message,
+    :type => prefix[1],
+    :bits_after_prefix => prefix.any? ? message.gsub(/\A#{prefix[0]}/, "") : nil,
     :milliseconds_to_next_message => micros_to_next_message/1000
   }
 end
