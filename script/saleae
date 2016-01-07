@@ -1,0 +1,81 @@
+#!/usr/bin/env ruby
+# Usage: script/saleae /path/to/captured_data.csv
+#        script/saleae data.csv | jq '.[] | .message'
+
+require "csv"
+require "json"
+
+PREFIXES = {
+  "10100011010010010" => "seconds",
+  "10100011010000010" => "minutes",
+  "110000110100" => "from cd-changer"
+}
+
+# input
+csv = CSV.read ARGV.shift
+# remove header row
+csv.shift if csv[0][0] == "Time[s]"
+
+# turn seconds into microseconds
+def seconds_to_micros(seconds)
+  seconds * 1_000_000
+end
+
+# extract timestamp from row
+def timestamp(row)
+  row[0].to_f
+end
+
+# extract signal from row
+def signal(row)
+  row[1].to_i
+end
+
+def prefix_and_type(message)
+  prefix = PREFIXES.find {|prefix, _| message.start_with?(prefix) }
+
+  prefix || []
+end
+
+def format_message(message, micros_to_next_message)
+  prefix = prefix_and_type(message)
+
+  {
+    :bits => message,
+    :type => prefix[1],
+    :prefix => prefix[0],
+    :bits_after_prefix => prefix.any? ? message.gsub(/\A#{prefix[0]}/, "") : nil,
+    :milliseconds_to_next_message => micros_to_next_message/1000
+  }
+end
+
+messages = []
+message = ""
+
+csv.each_with_index do |row, index|
+  if signal(row) == 0
+    # check width of pulse and record 0 or 1
+    width_of_pulse = seconds_to_micros(timestamp(csv[index+1]) - timestamp(row))
+
+    case width_of_pulse
+    when 70..110
+      message << "0"
+      expected_width_until_next_pulse = 890..930
+    when 630..670
+      message << "1"
+      expected_width_until_next_pulse = 340..380
+    end
+
+    if csv[index+2] && csv[index+1]
+      microseconds_to_next_pulse = seconds_to_micros(timestamp(csv[index+2]) - timestamp(csv[index+1]))
+      unless expected_width_until_next_pulse.cover? microseconds_to_next_pulse
+
+        messages.push format_message(message, microseconds_to_next_pulse)
+        message = ""
+      end
+    end
+  end
+end
+messages.push format_message(message, 0)
+
+puts JSON.pretty_generate(messages)
