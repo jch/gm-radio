@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # Usage: script/saleae /path/to/captured_data.csv
-#        script/saleae data.csv | jq '.[] | .message'
+#        script/saleae data.csv | jq '.[] | .bits'
 
 require "csv"
 require "json"
