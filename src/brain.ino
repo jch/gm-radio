@@ -1,215 +1,114 @@
-#define rxPin 4
-#define txPin 5
+#define txPin 2
+#define rxPin 3
 
-int val = 0;
-int start = 0;
-int start2 = 0;
-int end = 0;
-int end2 = 0;
-int loopCount = 0;
-int in_message = 0;
+String response;
 
-int bit_counter = 0;
-int message_start = 0;
-int message_end = 0;
+void write_one() {
+  digitalWrite(txPin, HIGH);
+  delayMicroseconds(648);
+  digitalWrite(txPin, LOW);
+  delayMicroseconds(352);
+}
+
+void write_zero() {
+  digitalWrite(txPin, HIGH);
+  delayMicroseconds(92);
+  digitalWrite(txPin, LOW);
+  delayMicroseconds(908);
+}
+
+void send_message(char *msg) {
+  for(unsigned int i = 0; i < strlen(msg); i++) {
+    char bit = msg[i];
+
+    if(bit == '0') {
+      write_zero();
+    } else if(bit == '1') {
+      write_one();
+    }
+  }
+}
+
+String listen_for_message() {
+  unsigned long pulse_start = 0;
+  unsigned long pulse_end = 0;
+  unsigned long listen_start = millis();
+  int expected_micros_to_next_pulse = 1000;
+  String message = "";
+  boolean input = true;
+  boolean keep_listening = true;
+
+  while(keep_listening && millis() - listen_start < 1000) {
+    input = digitalRead(rxPin);
+
+    if(input) {
+      if(pulse_start > 0) {
+        int pulse_width = micros() - pulse_start;
+
+        if(pulse_width >= 50 && pulse_width <= 120) {
+          message.concat("0");
+          pulse_end = micros();
+          expected_micros_to_next_pulse = 960;
+        } else if(pulse_width > 500 && pulse_width < 700) {
+          message.concat("1");
+          pulse_end = micros();
+          expected_micros_to_next_pulse = 510;
+        } else {
+          Serial.print("what is this? ");
+          Serial.println(pulse_width);
+        }
+
+        pulse_start = 0;
+
+      } else if(pulse_end != 0 && micros() - pulse_end > expected_micros_to_next_pulse) {
+        Serial.println(message);
+        pulse_end = 0;
+        keep_listening = false;
+      }
+    } else if(pulse_start == 0) {
+      pulse_start = micros();
+    }
+  }
+
+  return message;
+}
 
 void setup() {
   Serial.begin(9600);
   pinMode(rxPin, INPUT);
   pinMode(txPin, OUTPUT);
   digitalWrite(txPin, LOW);
-}
 
-void write_one() {
-  delayMicroseconds(10);
-  digitalWrite(txPin, HIGH);
-  delayMicroseconds(400);
-  digitalWrite(txPin, LOW);
-  delayMicroseconds(90);
-}
-
-void write_zero() {
-  delayMicroseconds(10);
-  digitalWrite(txPin, HIGH);
-  delayMicroseconds(100);
-  digitalWrite(txPin, LOW);
-  delayMicroseconds(390);
-}
-
-void write_nothing() {
-  delay(20);
-  Serial.println("");
-}
-
-void send_message(char *message) {
-  Serial.println("start of message");
-  for(unsigned int i = 0; i < strlen(message); i++) {
-    char bit = message[i];
-    if(bit == '0') {
-      write_zero();
-    } else if(bit == '1') {
-      write_one();
-    } else if(bit == '|') {
-      write_nothing();
-    }
-  }
-  Serial.println("\nend of message");
-}
-
-void listen(double delay_microseconds) {
-  unsigned int t = micros();
-  unsigned int loopCount = 0;
-  unsigned int start = 0;
-  unsigned int end = 0;
-
-  Serial.print("listening for ");
-  Serial.println(delay_microseconds);
-
-  while(micros() < t + delay_microseconds) {
-    int val = digitalRead(rxPin);
-    loopCount++;
-
-    if(val == 0 && start == 0) {
-      start = micros();
-    } else if (val == 1 && start !=0) {
-      end = micros();
-    }
-
-    in_message = loopCount < 100;
-
-    if (start != 0 && end != 0) {
-      if (in_message) {
-        if ((end - start) < 200) {
-          Serial.print(0);
-        } else {
-          Serial.print(1);
-        }
-      } else {
-        Serial.println("");
-      }
-
-      loopCount = 0;
-      start = 0;
-      end = 0;
-    }
-  }
-
-  Serial.println("done listening");
+  // delay(4000);
+  //
+  // char cd_changer_hello[] = "1100001101001000000100";
+  // String head_response1 = "111011110100110010";
+  // String head_response2 = "111001110100110011";
+  // String ideal_head_response = "111001101110000100";
+  // char yeah[] = "110000110100000011";
+  // boolean unmatched = true;
+  //
+  // send_message(cd_changer_hello);
+  //
+  // while(unmatched) {
+  //   response = listen_for_message();
+  //   Serial.println(response);
+  //
+  //   if(response == head_response1) {
+  //     unmatched = false;
+  //     send_message(cd_changer_hello);
+  //   } else if(response == head_response2) {
+  //     unmatched = false;
+  //     send_message(cd_changer_hello);
+  //   } else if(response == ideal_head_response) {
+  //     unmatched = false;
+  //     send_message(yeah);
+  //   }
+  // }
 }
 
 void loop() {
-  // ************************** WRITE
-  // delay(2000);
-  // listen(100000);
-  // char message1[] = "1000011010011|100001101001000000100|";
-  // send_message(message1);
-  // listen(29000000);
-  // // delayMicroseconds(29000); // 58 characters * 500 micros for 3rd radio message
-  // char message2[] = "|10000110100100010";
-  // send_message(message2);
-  // delay(2000000);
-
-  // ************************** READ
-  val = digitalRead(rxPin);
-  loopCount++;
-
-  if(val == 0 && start == 0) {
-    start = micros();
-  } else if (val == 1 && start !=0) {
-    end = micros();
-  }
-
-  in_message = loopCount < 1000;
-
-  if (start != 0 && end != 0) {
-    if (in_message) {
-      if ((end - start) < 200) {
-        Serial.print(0);
-      } else {
-        Serial.print(1);
-      }
-    } else {
-      Serial.println("");
-    }
-
-    loopCount = 0;
-    start = 0;
-    end = 0;
-  }
-
-  // ************ trying to calculate distance between bits
-  // val = digitalRead(rxPin);
-  //
-  // if(val == 0 && start == 0) {
-  //   start = micros();
-  // } else if (val == 1 && start !=0) {
-  //   end = micros();
-  // }
-  //
-  // if(val == 1 && start2 == 0) {
-  //   start2 = micros();
-  // } else if (val == 0 && start2 !=0) {
-  //   end2 = micros();
-  // }
-  //
-  // if(start != 0 && end != 0 && start2 != 0 && end2 != 0) {
-  //   int up = end - start;
-  //   int down = end2 - start2;
-  //   Serial.print("Up: ");
-  //   Serial.println(up);
-  //   Serial.print("Down: ");
-  //   Serial.println(down);
-  //   Serial.print("Total: ");
-  //   Serial.println(up + down);
-  //
-  //   start2 = 0;
-  //   end2 = 0;
-  //   start = 0;
-  //   end = 0;
-  // }
-
-  // Divide total message time by number of bits to get micros per bit
-  //
-  // val = digitalRead(rxPin);
-  // loopCount++;
-  //
-  // if(val == 0 && start == 0) {
-  //   start = micros();
-  // } else if (val == 1 && start !=0) {
-  //   end = micros();
-  // }
-  //
-  // in_message = loopCount < 100;
-  //
-  // if (start != 0 && end != 0) {
-  //   if (in_message) {
-  //     if ((end - start) < 200) {
-  //       // Serial.print(0);
-  //     } else {
-  //       // Serial.print(1);
-  //     }
-  //     bit_counter++;
-  //     message_end = micros();
-  //   } else {
-  //     Serial.println("");
-  //
-  //     if(message_start == 0) {
-  //       message_start = micros();
-  //     } else {
-  //       Serial.print("microseconds per bit: ");
-  //       Serial.println((message_end - message_start) / bit_counter);
-  //       // Serial.print("total: ");
-  //       // Serial.println(message_end - message_start);
-  //       // Serial.print("bit counter: ");
-  //       // Serial.println(bit_counter);
-  //       bit_counter = 0;
-  //       message_start = 0;
-  //       message_end = 0;
-  //     }
-  //   }
-  //
-  //   loopCount = 0;
-  //   start = 0;
-  //   end = 0;
-  // }
+  char three[] = "10100011010010010110";
+  send_message(three);
+  delay(1000);
 }
