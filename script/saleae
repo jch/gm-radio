@@ -58,18 +58,17 @@ csv.each_with_index do |row, index|
     width_of_pulse = seconds_to_micros(timestamp(csv[index+1]) - timestamp(row))
 
     case width_of_pulse
-    when 70..110
+    when 50..120
       message << "0"
-      expected_width_until_next_pulse = 890..930
-    when 630..670
+      expected_width_until_next_pulse = 880..960
+    when 500..700
       message << "1"
-      expected_width_until_next_pulse = 340..380
+      expected_width_until_next_pulse = 300..510
     end
 
     if csv[index+2] && csv[index+1]
       microseconds_to_next_pulse = seconds_to_micros(timestamp(csv[index+2]) - timestamp(csv[index+1]))
-      unless expected_width_until_next_pulse.cover? microseconds_to_next_pulse
-
+      unless expected_width_until_next_pulse && expected_width_until_next_pulse.cover?(microseconds_to_next_pulse)
         messages.push format_message(message, microseconds_to_next_pulse)
         message = ""
       end
@@ -78,4 +77,4 @@ csv.each_with_index do |row, index|
 end
 messages.push format_message(message, 0)
 
-puts JSON.pretty_generate(messages)
+puts JSON.pretty_generate(messages.reject {|m| m[:bits] == "" })
