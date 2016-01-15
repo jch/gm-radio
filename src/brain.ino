@@ -28,6 +28,9 @@ void send_message(char *msg) {
       write_one();
     }
   }
+
+  Serial.print("> ");
+  Serial.println(msg);
 }
 
 String listen_for_message() {
@@ -41,7 +44,7 @@ String listen_for_message() {
   // helpful for determining when a message is over
   int expected_micros_to_next_pulse = 1000;
   // msg is updated with each bit and then returned when the message is complete
-  String msg = "";
+  String msg = "< ";
   // signal_state is the value of the signal, the default is HIGH, or true, and
   // a pulse starts when signal_state is false and ends when signal_state is
   // true again
