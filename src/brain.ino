@@ -240,8 +240,8 @@ void setup() {
 
   // HELLO BIG LONG MESSAGE FROM CD CHANGER
   delay(50);
-  char cd_changer_sup[] = "11000011010000000000000101";
-  send_message(cd_changer_sup);
+  char cd_changer_sup2[] = "11000011010000000000000101";
+  send_message(cd_changer_sup2);
 
   // ... more to come
 }
