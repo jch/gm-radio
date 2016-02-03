@@ -122,58 +122,60 @@ void setup() {
 
   boolean unmatched = true;
 
-  delay(4000);
-
-  // listen for head1 until we hear it
-  char head1[] = "1101010100";
+  String head1 = "< 1101010100";
   while(unmatched) {
     response = listen_for_message();
 
     if(response == head1) {
+      Serial.println("head1");
       unmatched = false;
     }
   }
   unmatched = true;
 
   // listen for head2 until we hear it
-  char head2[] = "111001110100110011";
+  String head2 = "< 111001110100110011";
   while(unmatched) {
     response = listen_for_message();
 
     if(response == head2) {
+      Serial.println("head2");
       unmatched = false;
     }
   }
   unmatched = true;
 
   // listen for head3 until we hear it
-  char head3[] = "111001101111";
+  String head3 = "< 111001101111";
   while(unmatched) {
     response = listen_for_message();
 
     if(response == head3) {
+      Serial.println("head3");
       unmatched = false;
     }
   }
   unmatched = true;
 
   // listen for head4 until we hear it
-  char head4[] = "1100001011111111";
+  String head4 = "< 1100001011111111";
   while(unmatched) {
     response = listen_for_message();
 
     if(response == head4) {
+      Serial.println("head4");
       unmatched = false;
     }
   }
   unmatched = true;
 
   // listen for head5 until we hear it
-  char head5[] = "111011110100110010";
+  String head5 = "< 111011110100110010";
   while(unmatched) {
     response = listen_for_message();
 
     if(response == head5) {
+      Serial.println("head5");
       unmatched = false;
     }
   }
@@ -183,6 +185,7 @@ void setup() {
   delay(4);
   char cd_changer_hello[] = "1100001101001000000100";
   send_message(cd_changer_hello);
+  Serial.println("cd_changer_hello");
 
   // listen for head2 until we hear it
   while(unmatched) {
@@ -197,11 +200,13 @@ void setup() {
   // wait 7 milliseconds and then respond with hello
   delay(7);
   send_message(cd_changer_hello);
+  Serial.println("cd_changer_hello");
 
   // listen for head6 until we hear it
   char head6[] = "111001110100010010";
   while(unmatched) {
     response = listen_for_message();
+    Serial.println("head6");
 
     if(response == head6) {
       unmatched = false;
@@ -212,17 +217,20 @@ void setup() {
   // say hello again because why not
   delay(7);
   send_message(cd_changer_hello);
+  Serial.println("cd_changer_hello");
 
   // wait a bit and do this
   delay(50);
   char cd_changer_sup[] = "110000110100100010";
   send_message(cd_changer_sup);
+  Serial.println("cd_changer_sup");
 
   // listen for head3 until we hear it
   while(unmatched) {
     response = listen_for_message();
 
     if(response == head3) {
+      Serial.println("head3");
       unmatched = false;
     }
   }
@@ -233,6 +241,7 @@ void setup() {
     response = listen_for_message();
 
     if(response == head6) {
+      Serial.println("head6");
       unmatched = false;
     }
   }
@@ -242,6 +251,7 @@ void setup() {
   delay(50);
   char cd_changer_sup2[] = "11000011010000000000000101";
   send_message(cd_changer_sup2);
+  Serial.println("cd_changer_sup2");
 
   // ... more to come
 }
